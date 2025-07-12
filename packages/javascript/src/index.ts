@@ -301,7 +301,6 @@ async function autoDetectFramework(options: ChronycleOptions) {
 		// Check for NestJS
 		const nestjs = await import('@nestjs/core').catch(() => null)
 		if (nestjs) {
-			console.log('Chronycle: Detected NestJS framework')
 			return nestjsRecorder(options)
 		}
 	} catch {}
@@ -310,7 +309,6 @@ async function autoDetectFramework(options: ChronycleOptions) {
 		// Check for Express
 		const express = await import('express').catch(() => null)
 		if (express) {
-			console.log('Chronycle: Detected Express framework')
 			return expressRecorder(options)
 		}
 	} catch {}
@@ -319,7 +317,6 @@ async function autoDetectFramework(options: ChronycleOptions) {
 	// 	// Check for Fastify
 	// 	const fastify = await import('fastify').catch(() => null)
 	// 	if (fastify) {
-	// 		console.log('Chronycle: Detected Fastify framework')
 	// 		return fastifyRecorder(options)
 	// 	}
 	// } catch {}
@@ -328,13 +325,11 @@ async function autoDetectFramework(options: ChronycleOptions) {
 		// Check for Koa
 		const koa = await import('koa').catch(() => null)
 		if (koa) {
-			console.log('Chronycle: Detected Koa framework')
 			return koaRecorder(options)
 		}
 	} catch {}
 
 	// Default to universal middleware
-	console.log('Chronycle: Using universal middleware')
 	return chronycleRecorder(options)
 }
 
@@ -353,7 +348,6 @@ export function detectFrameworkFromContext(
 		req.app &&
 		req.app._router
 	) {
-		console.log('Chronycle: Detected NestJS framework from context')
 		return nestjsRecorder(options)
 	}
 
@@ -364,13 +358,11 @@ export function detectFrameworkFromContext(
 		typeof res.send === 'function' &&
 		req.originalUrl !== undefined
 	) {
-		console.log('Chronycle: Detected Express framework from context')
 		return expressRecorder(options)
 	}
 
 	// Koa detection
 	if (req && req.ctx && typeof req.ctx.body !== 'undefined') {
-		console.log('Chronycle: Detected Koa framework from context')
 		return koaRecorder(options)
 	}
 
@@ -381,12 +373,10 @@ export function detectFrameworkFromContext(
 		typeof res.send === 'function' &&
 		req.routerPath !== undefined
 	) {
-		console.log('Chronycle: Detected Fastify framework from context')
 		return fastifyRecorder(options)
 	}
 
 	// Default to universal middleware
-	console.log('Chronycle: Using universal middleware')
 	return chronycleRecorder(options)
 }
 
@@ -400,7 +390,6 @@ export function detectFrameworkFromProcess(options: ChronycleOptions) {
 			(typeof module !== 'undefined' &&
 				module.children?.some((m) => m.id.includes('@nestjs/core')))
 		) {
-			console.log('Chronycle: Detected NestJS framework from process')
 			return nestjsRecorder(options)
 		}
 
@@ -410,7 +399,6 @@ export function detectFrameworkFromProcess(options: ChronycleOptions) {
 			(typeof module !== 'undefined' &&
 				module.children?.some((m) => m.id.includes('express')))
 		) {
-			console.log('Chronycle: Detected Express framework from process')
 			return expressRecorder(options)
 		}
 
@@ -420,7 +408,6 @@ export function detectFrameworkFromProcess(options: ChronycleOptions) {
 			(typeof module !== 'undefined' &&
 				module.children?.some((m) => m.id.includes('fastify')))
 		) {
-			console.log('Chronycle: Detected Fastify framework from process')
 			return fastifyRecorder(options)
 		}
 
@@ -430,19 +417,16 @@ export function detectFrameworkFromProcess(options: ChronycleOptions) {
 			(typeof module !== 'undefined' &&
 				module.children?.some((m) => m.id.includes('koa')))
 		) {
-			console.log('Chronycle: Detected Koa framework from process')
 			return koaRecorder(options)
 		}
 	}
 
 	// Default to universal middleware
-	console.log('Chronycle: Using universal middleware')
 	return chronycleRecorder(options)
 }
 
 // Helper functions
 function getFullUrl(req: any): string {
-	console.log('getFullUrl called with req:', req)
 	// Try to get the protocol
 	const protocol =
 		req.protocol ||
@@ -459,15 +443,11 @@ function getFullUrl(req: any): string {
 
 	// Get the path
 	const path = req.originalUrl || req.url || '/'
-	console.log('protocol: ', protocol)
-	console.log('host: ', host)
-	console.log('path: ', path)
 
 	return `${protocol}://${host}${path}`
 }
 
 function normalizeRequest(req: any): any {
-	console.log('Raw request:', req)
 	return {
 		method: req.method,
 		endpoint: getFullUrl(req),
