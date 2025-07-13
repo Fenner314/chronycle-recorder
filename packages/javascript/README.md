@@ -257,7 +257,7 @@ MIT
 
 ## Support
 
-- Email: support@chronycle.com
+- Email: jacobgfenner@gmail.com
 - Issues: GitHub Issues
 - Documentation: Chronycle Docs
 
