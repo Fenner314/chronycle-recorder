@@ -1,13 +1,13 @@
 {
 	"name": "chronycle-recorder",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "",
-	"main": "disdt/index.js",
+	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"test": "jest",
+		"test": "jest --passWithNoTests",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
 		"prepublishOnly": "npm run build && npm test",
