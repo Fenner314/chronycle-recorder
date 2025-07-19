@@ -12,7 +12,7 @@ export interface ChronycleOptions {
 	timeout?: number
 	silent?: boolean
 	disableSmartFiltering?: boolean // Disable smart filtering for static files
-	ignoreMethods: MethodOptions[]
+	ignoreMethods?: MethodOptions[]
 }
 
 export interface RequestData {
