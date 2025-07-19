@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { catchError, tap } from 'rxjs'
 
+export type MethodOptions = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
+
 export interface ChronycleOptions {
 	apiKey: string
 	chronycleUrl?: string
@@ -10,6 +12,7 @@ export interface ChronycleOptions {
 	timeout?: number
 	silent?: boolean
 	disableSmartFiltering?: boolean // Disable smart filtering for static files
+	ignoreMethods: MethodOptions[]
 }
 
 export interface RequestData {
@@ -33,7 +36,7 @@ export function chronycleRecorder(options: ChronycleOptions) {
 		const requestData = normalizeRequest(req)
 
 		// Apply filters
-		if (!shouldRecord(requestData.endpoint, options)) {
+		if (!shouldRecord(requestData.endpoint, req.method, options)) {
 			return next()
 		}
 
@@ -57,7 +60,7 @@ function expressRecorder(options: ChronycleOptions) {
 			requestBody: req.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, options)) {
+		if (!shouldRecord(requestData.endpoint,req.method, options)) {
 			return next()
 		}
 
@@ -97,7 +100,7 @@ function fastifyRecorder(options: ChronycleOptions) {
 			requestBody: request.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, options)) {
+		if (!shouldRecord(requestData.endpoint,request.method, options)) {
 			return
 		}
 
@@ -133,7 +136,7 @@ export function nestjsRecorder(options: ChronycleOptions) {
 			requestBody: req.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, options)) {
+		if (!shouldRecord(requestData.endpoint, req.method, options)) {
 			return next()
 		}
 
@@ -201,7 +204,7 @@ export function createNestJSInterceptor(
 				requestBody: request.body,
 			}
 
-			if (!shouldRecord(requestData.endpoint, options)) {
+			if (!shouldRecord(requestData.endpoint, request.method, options)) {
 				return next.handle()
 			}
 
@@ -250,7 +253,7 @@ export function createNestJSGuard(options: ChronycleOptions) {
 			const endpoint = request.originalUrl || request.url
 
 			// Only record if endpoint matches criteria
-			if (shouldRecord(endpoint, options)) {
+			if (shouldRecord(endpoint, request.method, options)) {
 				// Store start time for later use
 				request.chronycleStartTime = Date.now()
 				request.chronycleOptions = options
@@ -274,7 +277,7 @@ function koaRecorder(options: ChronycleOptions) {
 			requestBody: ctx.request.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, options)) {
+		if (!shouldRecord(requestData.endpoint, ctx.method, options)) {
 			return await next()
 		}
 
@@ -457,14 +460,19 @@ function normalizeRequest(req: any): any {
 	}
 }
 
-function shouldRecord(endpoint: string, options: ChronycleOptions): boolean {
+function shouldRecord(endpoint: string, method: MethodOptions, options: ChronycleOptions): boolean {
 	// Sample rate check
-	if (options.sampleRate && Math.random() > options.sampleRate) {
+	if (options?.sampleRate && Math.random() > options.sampleRate) {
+		return false
+	}
+
+	const ignoreMethods = options?.ignoreMethods || ['HEAD', 'OPTIONS']
+	if (ignoreMethods.includes(method)) {
 		return false
 	}
 
 	// Default excludes for common browser/tool requests that aren't real API endpoints
-	const defaultExcludes = options.disableSmartFiltering
+	const defaultExcludes = options?.disableSmartFiltering
 		? []
 		: [
 				'/.well-known', // Browser/tool discovery endpoints
@@ -483,7 +491,7 @@ function shouldRecord(endpoint: string, options: ChronycleOptions): boolean {
 			]
 
 	// Combine user excludes with default excludes
-	const userExcludes = options.exclude || []
+	const userExcludes = options?.exclude || []
 	const allExcludes = [...defaultExcludes, ...userExcludes]
 
 	// Exclude list check - support both string includes and regex patterns
