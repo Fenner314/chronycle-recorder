@@ -1,7 +1,14 @@
 import axios from 'axios'
 import { catchError, tap } from 'rxjs'
 
-export type MethodOptions = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
+export type MethodOptions =
+	| 'GET'
+	| 'POST'
+	| 'PUT'
+	| 'DELETE'
+	| 'PATCH'
+	| 'HEAD'
+	| 'OPTIONS'
 
 export interface ChronycleOptions {
 	apiKey: string
@@ -60,7 +67,7 @@ function expressRecorder(options: ChronycleOptions) {
 			requestBody: req.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint,req.method, options)) {
+		if (!shouldRecord(requestData, req.method, options)) {
 			return next()
 		}
 
@@ -100,7 +107,7 @@ function fastifyRecorder(options: ChronycleOptions) {
 			requestBody: request.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint,request.method, options)) {
+		if (!shouldRecord(requestData, request.method, options)) {
 			return
 		}
 
@@ -136,7 +143,7 @@ export function nestjsRecorder(options: ChronycleOptions) {
 			requestBody: req.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, req.method, options)) {
+		if (!shouldRecord(requestData, req.method, options)) {
 			return next()
 		}
 
@@ -277,7 +284,7 @@ function koaRecorder(options: ChronycleOptions) {
 			requestBody: ctx.request.body,
 		}
 
-		if (!shouldRecord(requestData.endpoint, ctx.method, options)) {
+		if (!shouldRecord(requestData, ctx.method, options)) {
 			return await next()
 		}
 
@@ -460,7 +467,20 @@ function normalizeRequest(req: any): any {
 	}
 }
 
-function shouldRecord(endpoint: string, method: MethodOptions, options: ChronycleOptions): boolean {
+function shouldRecord(
+	requestData: Record<string, any>,
+	method: MethodOptions,
+	options: ChronycleOptions
+): boolean {
+	const { endpoint, headers } = requestData
+
+	const ignoreHeaderKey = Object.keys(headers).find(
+		(key) => key.toLowerCase() === 'x-chronycle-ignore'
+	)
+	if (ignoreHeaderKey && headers[ignoreHeaderKey] === 'true') {
+		return false
+	}
+
 	// Sample rate check
 	if (options?.sampleRate && Math.random() > options.sampleRate) {
 		return false
